@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flash de Planta · Namiquipa</title>
+<meta name="robots" content="noindex">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+
+:root{--navy:#1F3864;--dep:#2E5E4E;--au:#B8860B;--ag:#6b6b6b;--sol:#2E75B6;--ok:#1E8449;--okbg:#E8F5EC;--warn:#D68910;--warnbg:#FEF5E7;--bad:#C0392B;--badbg:#FDEDEC;--neu:#7F8C9A;--neubg:#F0F2F5;--bg:#F3F5F8;--card:#fff;--txt:#1d2433;--sub:#5d6778;--line:#e1e5eb;--pin:#E91E63}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+header{background:var(--navy);color:#fff;padding:12px 20px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;justify-content:space-between}
+header h1{font-size:19px;margin:0;font-weight:600}
+header .sub{font-size:12px;opacity:.85;margin-top:3px}
+.badge{background:#F4D03F;color:#4a3b00;font-weight:700;font-size:10px;padding:3px 8px;border-radius:10px;margin-left:6px;vertical-align:middle}
+.hdr-r{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px}
+.hdr-r select{font-size:14px;padding:5px 8px;border-radius:6px;border:0;font-weight:600;color:var(--navy)}
+.upd{opacity:.85}
+.tgl{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);padding:5px 10px;border-radius:14px;cursor:pointer;user-select:none}
+.tgl input{accent-color:var(--pin)}
+nav{background:#fff;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;padding:0 10px;position:sticky;top:0;z-index:5;scrollbar-width:none}
+nav a{padding:12px 14px;color:var(--sub);text-decoration:none;font-weight:600;white-space:nowrap;border-bottom:3px solid transparent;font-size:14px}
+nav a.on{color:var(--navy);border-bottom-color:var(--navy)}
+nav a.adm{margin-left:auto;color:#9aa3b0;font-weight:500}
+main{max-width:1280px;margin:0 auto;padding:16px}
+section{display:none}section.on{display:block}
+h2{font-size:13px;color:var(--navy);margin:22px 0 10px;text-transform:uppercase;letter-spacing:.5px}
+h2:first-child{margin-top:4px}
+h2 small{text-transform:none;letter-spacing:0;color:var(--sub);font-weight:400;font-size:12px;margin-left:6px}
+/* KPI con semáforo */
+.hero{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.k{background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,.06);border-left:6px solid var(--neu);position:relative}
+.k .l{padding-right:66px;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.3px}
+.k .v{font-size:28px;font-weight:700;margin:4px 0 2px;line-height:1.1}
+.k .v small{font-size:14px;font-weight:600;color:var(--sub)}
+.k .n{font-size:12px;color:var(--sub);line-height:1.35}
+.k .st{position:absolute;top:10px;right:10px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px}
+.k.ok{border-left-color:var(--ok)}.k.ok .st{background:var(--okbg);color:var(--ok)}
+.k.warn{border-left-color:var(--warn)}.k.warn .st{background:var(--warnbg);color:var(--warn)}
+.k.bad{border-left-color:var(--bad)}.k.bad .st{background:var(--badbg);color:var(--bad)}
+.k.neu .st{background:var(--neubg);color:var(--neu)}
+.k.vacio{border-left-color:#cfd5dd;background:repeating-linear-gradient(135deg,#fff,#fff 8px,#f7f8fa 8px,#f7f8fa 16px)}
+.k.vacio .v{color:#b3bac4}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:#FFF3CD;color:#7a5a00;margin-left:4px;vertical-align:middle;text-transform:none}
+.tag.est{background:#FFF3CD;color:#7a5a00}.tag.cap{background:#E3ECF7;color:#1F3864}
+/* importante del día */
+.imp{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:12px}
+.box{background:var(--card);border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.06);position:relative}
+.box h3{margin:0 0 8px;font-size:14px;color:var(--navy)}
+.lst{margin:0;padding:0;list-style:none}
+.lst li{padding:6px 0 6px 22px;border-bottom:1px dashed var(--line);position:relative;line-height:1.4}
+.lst li:last-child{border:0}
+.lst li:before{content:'';position:absolute;left:4px;top:11px;width:10px;height:10px;border-radius:50%;background:var(--neu)}
+.lst li.ok:before{background:var(--ok)}.lst li.warn:before{background:var(--warn)}.lst li.bad:before{background:var(--bad)}
+.coment{border:2px dashed #b9c6d8;border-radius:8px;padding:10px;color:#7d8794;font-style:italic;min-height:74px;background:#fafbfd}
+/* barra de avance */
+.prog{margin-top:12px}
+.bar{height:22px;background:#e9edf2;border-radius:11px;position:relative;overflow:visible;margin:22px 0 6px}
+.bar .fill{height:100%;border-radius:11px;background:var(--dep)}
+.bar .mk{position:absolute;top:-6px;width:3px;height:34px;background:var(--txt)}
+.bar .mk span{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;white-space:nowrap}
+.bar .pj{position:absolute;top:0;height:100%;border:2px dashed var(--dep);border-left:0;border-radius:0 11px 11px 0}
+.leg{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--sub)}
+.leg b{color:var(--txt)}
+/* charts */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.06);position:relative}
+.card h3{margin:0 0 2px;font-size:14px}
+.card .q{font-size:12px;color:var(--sub);margin-bottom:8px}
+.cv{position:relative;height:260px}.cv.s{height:150px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+th{background:#eef1f6;color:var(--navy);font-size:12px;position:sticky;top:0}
+td:first-child,th:first-child,.tl{text-align:left}
+tr.tot td{font-weight:700;background:#f7f9fc}
+td.cap{color:#9aa3b0;font-style:italic;background:#f6f9fd}
+.tbl{overflow:auto;max-height:520px}
+.nota{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.4}
+.chip{display:inline-block;padding:2px 8px;border-radius:9px;font-size:11px;font-weight:700}
+.chip.ok{background:var(--okbg);color:var(--ok)}.chip.bad{background:var(--badbg);color:var(--bad)}.chip.warn{background:var(--warnbg);color:var(--warn)}.chip.neu{background:var(--neubg);color:var(--neu)}
+.leyenda-sem{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:8px}
+.leyenda-sem i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+/* vista celular */
+.phone-wrap{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.phone{width:380px;background:#fff;border-radius:26px;box-shadow:0 6px 24px rgba(0,0,0,.15);overflow:hidden;border:8px solid #1d2433;position:relative}
+.phone .ph{background:var(--navy);color:#fff;padding:14px 16px}
+.phone .ph b{font-size:16px}.phone .ph div{font-size:11px;opacity:.85;margin-top:2px}
+.phone .pb{padding:12px}
+.phone .k{padding:10px 12px;box-shadow:none;border:1px solid var(--line);border-left-width:6px}
+.phone .k .v{font-size:22px}
+.phone .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.phone .lst li{font-size:12px}
+.phone .pf{font-size:10px;color:var(--sub);text-align:center;padding:8px;border-top:1px solid var(--line)}
+.side{max-width:420px}
+.side ol{padding-left:18px;line-height:1.6;margin:6px 0}
+/* notas para desarrollador */
+.pin{display:none;position:absolute;top:-9px;left:-9px;z-index:3;background:var(--pin);color:#fff;font-weight:700;font-size:11px;width:22px;height:22px;border-radius:50%;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:help}
+body.notas .pin{display:flex}
+[data-n]{position:relative}
+body.notas [data-n]{outline:2px dashed rgba(233,30,99,.45);outline-offset:3px}
+.devlist{display:none;background:#fff;border:2px solid var(--pin);border-radius:12px;padding:12px 16px;margin-bottom:16px}
+body.notas .devlist{display:block}
+.devlist h3{margin:0 0 6px;color:var(--pin);font-size:14px}
+.devlist ol{margin:0;padding-left:22px;line-height:1.55;font-size:13px}
+.devlist li::marker{color:var(--pin);font-weight:700}
+.adminbox{background:#fff;border:2px dashed #b9c6d8;border-radius:12px;padding:16px}
+footer{text-align:center;color:var(--sub);font-size:12px;padding:20px}
+@media(max-width:1000px){.hero{grid-template-columns:repeat(3,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}.imp{grid-template-columns:1fr}}
+body.shot nav{position:static}
+@media(max-width:700px){
+ .k .l{padding-right:0}
+ main{padding:10px}.hero,.kpis{grid-template-columns:1fr 1fr;gap:8px}
+ .k{padding:10px}.k .v{font-size:21px}.k .st{position:static;display:inline-block;margin-top:4px}
+ .grid,.grid4{grid-template-columns:1fr}.cv{height:220px}
+ header h1{font-size:16px}header .sub{display:none}.upd{display:none}
+ nav a{padding:11px 10px;font-size:13px}
+ .phone{width:100%;border-width:0;border-radius:12px}
+}
+
+/* ===== agregado para la versión real (login, carga del RO, admin) ===== */
+.btn{border:0;border-radius:8px;padding:9px 16px;font-weight:700;font-size:14px;cursor:pointer;background:var(--navy);color:#fff}
+.btn.sec{background:#fff;color:var(--navy);border:1px solid #c9d2df}
+.btn.ok{background:var(--ok)}.btn.peligro{background:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+.hdr-r .btn{padding:6px 12px;font-size:12px}
+.quien{background:rgba(255,255,255,.12);padding:5px 10px;border-radius:14px;white-space:nowrap}
+.quien a{color:#fff;opacity:.8;margin-left:6px;cursor:pointer;text-decoration:underline}
+#pantalla{max-width:520px;margin:60px auto;background:#fff;border-radius:16px;padding:28px 30px;box-shadow:0 4px 18px rgba(0,0,0,.08);text-align:center}
+#pantalla h2{font-size:20px;text-transform:none;letter-spacing:0;margin:0 0 6px}
+#pantalla p{color:var(--sub);line-height:1.5}
+#pantalla .msg{min-height:20px;font-size:13px;margin-top:10px}
+.msg.mal{color:var(--bad)}.msg.bien{color:var(--ok)}
+.gbtn{display:inline-flex;align-items:center;gap:10px;background:#fff;border:1px solid #c9d2df;border-radius:8px;padding:10px 18px;font-weight:700;font-size:15px;cursor:pointer;color:#1d2433}
+.gbtn svg{width:20px;height:20px}
+.drop{border:2px dashed #9fb3cf;border-radius:12px;padding:26px;text-align:center;background:#f8fafd;color:var(--sub);cursor:pointer}
+.drop.sobre{background:#e9f1fb;border-color:var(--navy)}
+.drop b{color:var(--navy)}
+.prev{margin-top:12px;text-align:left}
+.prev table td{text-align:left}
+.aviso{border-left:5px solid var(--bad);background:#fff;padding:9px 12px;border-radius:8px;margin:6px 0;font-size:13px;line-height:1.45}
+.aviso.m{border-color:var(--warn)}.aviso.b{border-color:var(--sol)}
+.aviso b{display:block}
+.pestanas{display:flex;gap:6px;margin:4px 0 12px;flex-wrap:wrap}
+.pestanas button{border:1px solid #c9d2df;background:#fff;border-radius:16px;padding:6px 14px;font-weight:600;color:var(--sub);cursor:pointer}
+.pestanas button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.usr td input[type=checkbox]{width:16px;height:16px}
+.usr td,.usr th{text-align:center}.usr td:first-child,.usr th:first-child{text-align:left}
+.usr .n{display:block;font-size:11px;color:var(--sub)}
+.form-linea{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.form-linea input{padding:8px 10px;border:1px solid #c9d2df;border-radius:8px;font-size:14px;min-width:220px}
+.enCurso{background:#FFF3CD;color:#7a5a00;border-radius:8px;padding:6px 10px;font-size:12px;margin:0 0 10px;display:none}
+.modo-local{background:#7a5a00;color:#fff;text-align:center;font-size:12px;padding:4px}
+.oculto{display:none!important}
+.descargar{margin-top:10px}
+
+</style>
+</head>
+<body>
+<div class="modo-local oculto" id="modoLocal">MODO LOCAL DE PRUEBA · el archivo se abrió desde la computadora: no hay inicio de sesión ni se guarda nada en la base</div>
+<header>
+  <div>
+    <h1>Flash de Planta · Namiquipa <span class="badge">PILOTO</span></h1>
+    <div class="sub" id="subt">Minera Río Tinto · Minera Tasmania, S.A. de C.V. · Unidad Namiquipa</div>
+  </div>
+  <div class="hdr-r">
+    <span class="upd" id="upd"></span>
+    <label class="oculto" id="lblMes">Mes: <select id="mes"></select></label>
+    <label class="oculto" id="lblDia">Día: <select id="dia"></select></label>
+    <button class="btn sec oculto" id="btnSubir" title="Subir el Excel RO del mes">⬆ Subir RO</button>
+    <span class="quien oculto" id="quien"></span>
+  </div>
+</header>
+
+<!-- ============ PANTALLA: entrar / sin acceso / sin datos / cargando ============ -->
+<div id="pantalla">
+  <h2 id="pTit">Flash de Planta · Namiquipa</h2>
+  <p id="pTxt">Cargando…</p>
+  <div id="pAcc"></div>
+  <div class="msg" id="pMsg"></div>
+</div>
+
+<nav id="nav" class="oculto">
+  <a href="#resumen">Resumen</a>
+  <a href="#deposito">Depósito</a>
+  <a href="#mc">Merrill-Crowe</a>
+  <a href="#riego">Patios</a>
+  <a href="#celular" class="solo-exportar">Para WhatsApp</a>
+  <a href="#admin" class="adm solo-admin">⚙ Admin</a>
+</nav>
+<main id="main" class="oculto">
+
+<!-- ================= RESUMEN ================= -->
+<section id="resumen">
+  <div class="enCurso" id="enCurso"></div>
+  <h2>Resultado del día <span id="r-dia" style="text-transform:none"></span><small>depósito = día calendario · MC = día operativo 07:00–06:59</small></h2>
+  <div class="hero" id="hero"></div>
+  <div class="leyenda-sem"><span><i style="background:var(--ok)"></i>Cumple meta (≥100%)</span><span><i style="background:var(--warn)"></i>Cerca (90–99%)</span><span><i style="background:var(--bad)"></i>Debajo (&lt;90%)</span><span><i style="background:var(--neu)"></i>Sin meta definida todavía</span><span><span class="tag est">estimado</span> ley provisional / cálculo no definitivo</span></div>
+
+  <div class="imp">
+    <div class="box"><h3>Lo importante del día</h3><ul class="lst" id="imp"></ul></div>
+    <div class="box"><h3>Comentario del superintendente</h3><div class="coment" id="coment">Pendiente: el comentario del día se capturará en Admin (siguiente versión).</div></div>
+  </div>
+
+  <h2>Avance del mes al corte</h2>
+  <div class="box prog">
+    <div class="leg" id="leg"></div>
+    <div class="bar" id="bar"></div>
+    <div class="nota" id="barn"></div>
+  </div>
+  <div class="kpis" id="k-mes" style="margin-top:12px"></div>
+
+  <div class="grid" style="margin-top:14px">
+    <div class="card"><h3>Depósito acumulado vs meta acumulada</h3><div class="q">¿Vamos arriba o abajo de la meta?</div><div class="cv"><canvas id="c-r-acum"></canvas></div></div>
+    <div class="card"><h3>Onzas recuperadas por día</h3><div class="q">Au y Ag por separado (no sumados en Au eq)</div><div class="cv"><canvas id="c-r-oz"></canvas></div></div>
+  </div>
+</section>
+
+<!-- ================= DEPÓSITO ================= -->
+<section id="deposito">
+  <h2>Depósito de jales<small>día calendario · turno de día · meta por día programado</small></h2>
+  <div class="kpis" id="k-dep"></div>
+  <div class="grid" style="margin-top:14px">
+    <div class="card"><h3>t secas por día vs meta diaria</h3><div class="q">Color = semáforo contra la meta del día · gris = no programado</div><div class="cv"><canvas id="c-d-dia"></canvas></div></div>
+    <div class="card"><h3>Horas operadas y de paro por día</h3><div class="q">Domingo / día no programado en gris, no en rojo</div><div class="cv"><canvas id="c-d-horas"></canvas></div></div>
+    <div class="card"><h3>Horas de paro por causa (mes)</h3><div class="q">¿Qué nos está quitando tonelaje?</div><div class="cv"><canvas id="c-d-pareto"></canvas></div></div>
+    <div class="card"><h3>Consumo en aglomerado (kg/t seca)</h3><div class="q">Línea punteada = referencia de diseño 15 kg/t (confirmar)</div><div class="cv"><canvas id="c-d-reac"></canvas></div></div>
+  </div>
+  <h2>Bitácora de paros</h2>
+  <div class="card tbl"><table id="t-paros"></table></div>
+</section>
+
+<!-- ================= MC ================= -->
+<section id="mc">
+  <h2>Merrill-Crowe · acumulado del mes<small>día operativo 07:00–06:59</small></h2>
+  <div class="kpis" id="k-mc"></div>
+  <h2>Oro equivalente<small id="aueqNota"></small></h2>
+  <div class="kpis" id="k-aueq"></div>
+  <div class="grid" style="margin-top:14px">
+    <div class="card"><h3>Oro recuperado por día y acumulado (oz)</h3><div class="cv"><canvas id="c-m-au"></canvas></div></div>
+    <div class="card"><h3>Plata recuperada por día y acumulada (oz)</h3><div class="cv"><canvas id="c-m-ag"></canvas></div></div>
+    <div class="card"><h3>Solución procesada (m³) y flujo (m³/h)</h3><div class="cv"><canvas id="c-m-sol"></canvas></div></div>
+    <div class="card"><h3>Eficiencia de precipitación por día</h3><div class="q">Ponderada por flujo · meta por definir</div><div class="cv"><canvas id="c-m-ef"></canvas></div></div>
+  </div>
+  <h2>Variables de operación del día <span id="m-dia" style="text-transform:none"></span><small>cada variable con su propia escala y unidad</small></h2>
+  <div class="grid4" id="vars"></div>
+  <h2>Detalle diario</h2>
+  <div class="card tbl"><table id="t-mc"></table></div>
+</section>
+
+<!-- ================= RIEGO ================= -->
+<section id="riego">
+  <h2 style="margin-top:4px">Estado por patio</h2>
+  <div class="card tbl"><table id="t-rie"></table>
+  <div class="nota">Toneladas y fechas de depósito: hoja <i>Resumen por patio</i> (dato real). Columnas en azul claro = <b>por capturar</b>. Objetivo por edad del patio = referencia de diseño de planta (confirmar antes de usar como meta).</div></div>
+  <h2>Piletas</h2>
+  <div class="kpis" id="k-pil"></div>
+  <h2>Inventario en patios<small>onzas depositadas calculadas con ley provisional</small></h2>
+  <div class="grid">
+    <div class="card"><h3>t secas por patio</h3><div class="cv"><canvas id="c-p-pat"></canvas></div></div>
+    <div class="card"><h3>Oz depositadas por patio <span class="tag est">estimado</span></h3><div class="q">Ley de depósito provisional; no es metal recuperado</div><div class="cv"><canvas id="c-p-oz"></canvas></div></div>
+  </div>
+</section>
+
+<!-- ================= CELULAR ================= -->
+<section id="celular">
+  <h2>Ejecutivo diario para celular / WhatsApp</h2>
+  <div class="phone-wrap">
+    <div>
+      <div class="phone" id="phone"></div>
+      <div class="descargar"><button class="btn" id="btnImg">⬇ Descargar imagen</button> <span class="nota" id="imgMsg"></span></div>
+    </div>
+    <div class="side box">
+      <h3>Cómo se usa</h3>
+      <ol>
+        <li>Al cierre del día se elige la fecha arriba.</li>
+        <li>Botón <b>"Descargar imagen"</b> (PNG del tamaño de un celular).</li>
+        <li>Se manda al grupo de WhatsApp de gerencia.</li>
+      </ol>
+      <p class="nota">Una sola pantalla, sin desplazarse. Solo 4 indicadores, 3 líneas de "lo importante" y la barra del mes. Lo demás se consulta en la página.</p>
+      <p class="nota"><b>Ojo:</b> esta imagen lleva onzas y leyes → solo para el grupo autorizado.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ADMIN ================= -->
+<section id="admin">
+  <h2>Administración<small>solo administradores</small></h2>
+  <div class="pestanas" id="admTabs">
+    <button data-t="carga" class="on">Cargar RO</button>
+    <button data-t="calidad">Calidad de datos</button>
+    <button data-t="usuarios">Usuarios</button>
+    <button data-t="accesos">Accesos</button>
+    <button data-t="prox">Próximamente</button>
+  </div>
+  <div data-p="carga">
+    <div class="box">
+      <h3>Subir el Excel RO del mes</h3>
+      <p class="nota">Cada subida <b>reescribe el mes completo</b>. Sube siempre la versión más reciente del archivo (guardada en Excel). Lo que esté mal se corrige en el Excel y se vuelve a subir.</p>
+      <div class="drop" id="drop"><b style="font-size:20px;letter-spacing:1px">ACTUALIZAR</b></div>
+      <input type="file" id="archivo" accept=".xlsx,.xlsm" class="oculto">
+      <div class="prev" id="prev"></div>
+    </div>
+    <div class="box" style="margin-top:12px"><h3>Meses guardados</h3><div class="tbl"><table id="t-meses"></table></div></div>
+  </div>
+  <div data-p="calidad" class="oculto"><div id="l-cal"></div></div>
+  <div data-p="usuarios" class="oculto">
+    <div class="box">
+      <h3>Usuarios con acceso</h3>
+      <div class="form-linea"><input id="uCorreo" placeholder="correo@mrtcorporativo.mx"><input id="uNombre" placeholder="Nombre (opcional)"><button class="btn" id="uAgregar">Agregar (solo ver)</button></div>
+      <div class="msg" id="uMsg"></div>
+      <div class="tbl"><table class="usr" id="t-usr"></table></div>
+      <p class="nota">Ver = entra al Flash · Exportar = imagen para WhatsApp · Subir = carga el RO · Buzón = lee comentarios · Admin = todo, incluido este panel. Los permisos los valida la base de datos, no solo la pantalla.</p>
+    </div>
+  </div>
+  <div data-p="accesos" class="oculto"><div class="box"><h3>Accesos por usuario</h3><div class="tbl"><table id="t-acc"></table></div></div></div>
+  <div data-p="prox" class="oculto">
+    <div class="adminbox">
+      <p><b>Siguiente versión</b> (necesitan tablas nuevas en Supabase):</p>
+      <ul class="nota" style="font-size:13px;line-height:1.7">
+        <li>Comentario del superintendente por día (máx. 3 líneas).</li>
+        <li>Tabla de metas: eficiencia Au/Ag, oz por día, horas de paro, flujo de riego, ppm, pH.</li>
+        <li>Captura de riego por patio (inicio de riego, área, flujo, NaCN, pH) y tabla de piletas nivel→m³.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+<footer id="pie">Flash de Planta Namiquipa · uso interno</footer>
+
+<script>
+/* Flash de Planta Namiquipa · v1.0 · 14-nov-26 · César Salido (Unidad Cieneguita) */
+/* =====================================================================
+   LECTOR DEL EXCEL "RO" DE NAMIQUIPA  →  objeto DATA (una fila por mes en planta_reportes)
+   Busca hojas por nombre y columnas por su encabezado (no por posición fija).
+   ===================================================================== */
+const LECTOR_VERSION = 1;
+const nrm = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+function num(x) {
+  if (x == null || x === '') return null;
+  if (typeof x === 'number') return isFinite(x) ? x : null;
+  const m = String(x).replace(',', '.').match(/-?\d+(\.\d+)?/);
+  return m ? +m[0] : null;
+}
+const p2 = v => String(v).padStart(2, '0');
+function fechaSerial(v) {                       // número de serie de Excel → 'AAAA-MM-DD'
+  if (typeof v !== 'number' || v < 20000) return null;
+  const d = XLSX.SSF.parse_date_code(v + 1e-7);
+  return d ? `${d.y}-${p2(d.m)}-${p2(d.d)}` : null;
+}
+function horaSerial(v) { const d = XLSX.SSF.parse_date_code(v + 1e-7); return `${p2(d.H)}:${p2(d.M)}`; }
+
+function leerRO(buf, nombreArchivo) {
+  const wb = XLSX.read(buf, { type: 'array', cellStyles: true });
+  const avisos = [], limpiezas = [];
+  const hoja = nombre => { const k = wb.SheetNames.find(s => nrm(s) === nrm(nombre)); return k ? wb.Sheets[k] : null; };
+  const filas = ws => {
+    const r = XLSX.utils.decode_range(ws['!ref']); r.s.r = 0; r.s.c = 0;
+    return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null, blankrows: true, range: r });
+  };
+  const buscaFila = (rows, deben) => rows.findIndex(r => r && deben.every(t => r.some(c => nrm(c) === nrm(t))));
+  const col = (row, txt, modo = 'igual') => row.findIndex(c => modo === 'igual' ? nrm(c) === nrm(txt) : nrm(c).startsWith(nrm(txt)));
+  const numL = (v, hojaN, celda) => {                // número; si venía como texto, se anota
+    const x = num(v);
+    if (typeof v === 'string' && v.trim() !== '' && x != null && String(x) !== v.trim()) limpiezas.push({ hoja: hojaN, celda, valor: v });
+    return x;
+  };
+  const etiqueta = (rows, txt) => {
+    for (const r of rows) { if (!r) continue;
+      for (let i = 0; i < r.length; i++) if (nrm(r[i]).startsWith(nrm(txt))) { for (let j = i + 1; j < r.length; j++) if (r[j] != null && r[j] !== '') return r[j]; return null; } }
+    return null;
+  };
+
+  // ---------- Parámetros ----------
+  const wsP = hoja('Parámetros'); if (!wsP) throw new Error('No encontré la hoja "Parámetros". ¿Es el archivo RO?');
+  const rP = filas(wsP);
+  const per = fechaSerial(etiqueta(rP, 'Periodo de reporte'));
+  if (!per) throw new Error('En "Parámetros" no encontré el periodo de reporte (día 1 del mes).');
+  const params = {
+    periodo: per.slice(0, 7),
+    meta_mes: num(etiqueta(rP, 'Meta mensual')), dias_prog: num(etiqueta(rP, 'Días programados')),
+    meta_dia: num(etiqueta(rP, 'Meta diaria')), arranque_mc: fechaSerial(etiqueta(rP, 'Fecha de arranque')),
+    precio_au_resp: num(etiqueta(rP, 'Precio Au')), precio_ag_resp: num(etiqueta(rP, 'Precio Ag')),
+    ratio_resp: num(etiqueta(rP, 'Ratio de respaldo usado')) ?? num(etiqueta(rP, 'Factor Ag/Au usado')) ?? num(etiqueta(rP, 'Factor Ag/Au de respaldo')),
+    tipo_precio: etiqueta(rP, 'Tipo de precio'), periodo_precio: etiqueta(rP, 'Periodo o fecha del precio'),
+  };
+
+  // ---------- BD DEP (depósito diario) ----------
+  const wsD = hoja('BD DEP'); if (!wsD) throw new Error('No encontré la hoja "BD DEP".');
+  const rD = filas(wsD);
+  const hD = buscaFila(rD, ['Fecha', 'Ton secas', 'Ley Au']); if (hD < 0) throw new Error('En "BD DEP" no encontré los encabezados (Fecha, Ton secas, Ley Au).');
+  const H = rD[hD], Hs = rD[hD - 1] || [];
+  const cD = {
+    fecha: col(H, 'Fecha'), patio: col(H, 'Patio'), hop: col(H, 'Hrs op.'), hparo: col(H, 'Hrs paro'), th: col(H, 'Ton humedas'),
+    hum: col(H, 'Humedad'), ts: col(H, 'Ton secas'), tph: col(H, 't humedas/h'), meta: col(H, 'Meta dia'), cal: col(H, 'Cal kg/t'),
+    cem: col(H, 'Cemento kg/t'), rea: col(H, 'Reactivo kg/t'), au: col(H, 'Ley Au'), ag: col(H, 'Ley Ag'), ozau: col(H, 'Oz-Au'),
+    ozag: col(H, 'Oz-Ag'), causa: col(H, 'Causa principal', 'empieza'), com: col(H, 'Comentarios'), aueq: col(H, 'Oz-AuEq'),
+    pau: col(H, 'Au (USD)'), pag: col(H, 'Ag (USD)'),
+  };
+  cD.ratio = Math.max(col(H, 'Ratio'), col(Hs, 'Ratio'));
+  for (const k of ['fecha', 'ts', 'au', 'ag', 'ozau', 'ozag']) if (cD[k] < 0) throw new Error(`En "BD DEP" falta la columna de ${k}.`);
+  const amarillo = (r, c) => { if (c < 0) return false; const cel = wsD[XLSX.utils.encode_cell({ r, c })]; const rgb = cel && cel.s && cel.s.fgColor && cel.s.fgColor.rgb; return !!rgb && /FFFF00$/i.test(rgb); };
+  const dep = {};
+  for (let i = hD + 1; i < Math.min(rD.length, hD + 34); i++) {
+    const r = rD[i]; if (!r) continue; const f = fechaSerial(r[cD.fecha]); if (!f || !f.startsWith(params.periodo)) continue;
+    const g = (k, dec) => cD[k] >= 0 ? numL(r[cD[k]], 'BD DEP', XLSX.utils.encode_cell({ r: i, c: cD[k] })) : null;
+    const txt = k => cD[k] >= 0 && r[cD[k]] != null && String(r[cD[k]]).trim() !== '' ? String(r[cD[k]]).trim() : null;
+    dep[f] = { patio: g('patio'), hop: g('hop'), hparo: g('hparo'), th: g('th'), hum: g('hum'), ts: g('ts'), tph: g('tph'), meta: g('meta'),
+      cal: g('cal'), cem: g('cem'), rea: g('rea'), au: g('au'), ag: g('ag'), ozau: g('ozau'), ozag: g('ozag'), causa: txt('causa'), com: txt('com'),
+      aueq: g('aueq'), pau: g('pau'), pag: g('pag'), ratio: g('ratio'), ley_prov: amarillo(i, cD.au) || amarillo(i, cD.ag) };
+    if (!(dep[f].ts > 0)) { dep[f].ley_prov = false; }
+  }
+
+  // ---------- Resumen Diario (MC diario) ----------
+  const wsR = hoja('Resumen Diario'); if (!wsR) throw new Error('No encontré la hoja "Resumen Diario".');
+  const rR = filas(wsR);
+  const hR = rR.findIndex(r => r && nrm(r[0]) === 'fecha' && r.some(c => nrm(c).startsWith('au recuperado')));
+  if (hR < 0) throw new Error('En "Resumen Diario" no encontré los encabezados.');
+  const R = rR[hR], cr = t => col(R, t, 'empieza');
+  const cR = { ozau: cr('Au recuperado'), ozag: cr('Ag recuperado'), m3: cr('Flujo procesado'), h: cr('Horas operadas'), flujo: cr('Flujo promedio'),
+    cab_au: cr('Cabeza Au'), cola_au: cr('Cola Au'), cab_ag: cr('Cabeza Ag'), cola_ag: cr('Cola Ag'), ef_au: cr('Eficiencia Au'), ef_ag: cr('Eficiencia Ag'),
+    ley: cr('Leyes'), hens_au: cr('Horas con ensaye Au'), hens_ag: cr('Horas con ensaye Ag'), cob_au: cr('Cobertura ensaye Au'), cob_ag: cr('Cobertura ensaye Ag'),
+    aueq: cr('Au eq recuperado') };
+  const dias = [];
+  for (let i = hR + 1; i < Math.min(rR.length, hR + 32); i++) {
+    const r = rR[i]; if (!r) continue; const f = fechaSerial(r[0]); if (!f || !f.startsWith(params.periodo)) continue;
+    const g = k => cR[k] >= 0 ? num(r[cR[k]]) : null;
+    dias.push({ fecha: f, dep: dep[f] || {}, ley_estado: cR.ley >= 0 ? r[cR.ley] : null,
+      mc: { ozau: g('ozau'), ozag: g('ozag'), m3: g('m3'), h: g('h'), flujo: g('flujo'), cab_au: g('cab_au'), cola_au: g('cola_au'), cab_ag: g('cab_ag'),
+        cola_ag: g('cola_ag'), ef_au: g('ef_au'), ef_ag: g('ef_ag'), hens_au: g('hens_au'), hens_ag: g('hens_ag'), cob_au: g('cob_au'), cob_ag: g('cob_ag'),
+        aueq: g('aueq') } });
+  }
+  if (!dias.length) throw new Error('"Resumen Diario" no trae días del periodo ' + params.periodo + '. ¿Se guardó el archivo en Excel?');
+  if (dias.every(d => d.mc.ozau == null && d.dep.ts == null)) avisos.push(['m', 'El archivo no trae valores calculados', 'Ábrelo en Excel, deja que calcule y guárdalo antes de subirlo.']);
+
+  // ---------- BD MC (horario) ----------
+  const horario = {};
+  const wsM = hoja('BD MC');
+  if (wsM) {
+    const rM = filas(wsM);
+    const hG = rM.findIndex(r => r && r.some(c => nrm(c).startsWith('flujometro de salida')));
+    if (hG >= 0) {
+      const G = rM[hG], S = rM[hG + 1] || [];
+      const g0 = t => col(G, t, 'empieza');
+      const sub = (t, desde = 0) => { for (let i = desde; i < S.length; i++) if (nrm(S[i]).startsWith(nrm(t))) return i; return -1; };
+      const lix = g0('reactivo lix');
+      const cM = { m3e: g0('flujometro de entrada') + 1, m3: g0('flujometro de salida') + 1, vac: g0('vacio'), od: g0('o.d'), temp: g0('temperatura'),
+        zn: g0('zinc'), cab_au: g0('cabeza au'), cola_au: g0('cola au'), cab_ag: g0('cabeza ag'), cola_ag: g0('cola ag'),
+        ozau: sub('oz au'), ozag: sub('oz ag'), niv_barren: g0('pileta barren'), niv_rica: g0('pileta rica'),
+        nacn_sc: lix >= 0 ? sub('tnk sc', lix) : -1, nacn_rica: lix >= 0 ? sub('pileta rica', lix) : -1, nacn_barren: lix >= 0 ? sub('pileta barren', lix) : -1 };
+      let tc = 4;                                       // columna de fecha-hora (E); se confirma con los datos
+      for (const c of [4, 5, 7, 3]) { if (rM.slice(hG + 2, hG + 40).some(r => r && typeof r[c] === 'number' && r[c] > 40000)) { tc = c; break; } }
+      for (let i = hG + 2; i < rM.length; i++) {
+        const r = rM[i]; if (!r || typeof r[tc] !== 'number' || r[tc] < 40000) continue;
+        const m3 = num(r[cM.m3]); if (!(m3 > 0)) continue;
+        const od = fechaSerial(r[tc] - 7 / 24); if (!od || !od.startsWith(params.periodo)) continue;
+        const row = { t: horaSerial(r[tc]) };
+        for (const [k, c] of Object.entries(cM)) row[k] = c >= 0 ? numL(r[c], 'BD MC', XLSX.utils.encode_cell({ r: i, c })) : null;
+        (horario[od] = horario[od] || []).push(row);
+      }
+    } else avisos.push(['b', 'BD MC sin encabezados reconocidos', 'No se cargó el detalle horario de Merrill-Crowe.']);
+  }
+
+  // ---------- Resumen por patio ----------
+  const patios = []; let ratio_prom = null;
+  const wsRP = hoja('Resumen por patio');
+  if (wsRP) {
+    const rp = filas(wsRP);
+    ratio_prom = num(etiqueta(rp, 'Ratio prom')) ?? num(etiqueta(rp, 'Factor Ag/Au'));
+    const hp = buscaFila(rp, ['Patio', 'Inicio de depósito']);
+    if (hp >= 0) for (let i = hp + 1; i < hp + 20 && i < rp.length; i++) {
+      const r = rp[i]; if (!r || typeof r[0] !== 'number') { if (r && nrm(r[0]) === 'total') break; continue; }
+      patios.push({ patio: r[0], ini: fechaSerial(r[1]), fin: fechaSerial(r[2]), dias: num(r[3]), th: num(r[4]), ts: num(r[5]), ozau: num(r[6]), ozag: num(r[7]), aueq: num(r[8]) });
+    }
+  }
+  // ---------- Histórico depósitos ----------
+  const historico = [];
+  const wsH = hoja('Histórico depósitos');
+  if (wsH) {
+    const rh = filas(wsH); const hh = buscaFila(rh, ['Fecha', 'Patio', 't secas']);
+    if (hh >= 0) { const Hh = rh[hh]; const c = t => col(Hh, t);
+      const ch = { f: c('Fecha'), p: c('Patio'), ts: c('t secas'), au: c('Oz Au'), ag: c('Oz Ag'), eq: c('Oz AuEq'), k: c('Factor Ag/Au'), pau: c('Au (USD)'), pag: c('Ag (USD)') };
+      for (let i = hh + 1; i < rh.length; i++) { const r = rh[i]; if (!r) continue; const f = fechaSerial(r[ch.f]); if (!f) continue;
+        const v = k => ch[k] >= 0 ? num(r[ch[k]]) : null;
+        historico.push({ fecha: f, patio: num(r[ch.p]), ts: v('ts'), ozau: v('au'), ozag: v('ag'), aueq: v('eq'), factor: v('k'), pau: v('pau'), pag: v('pag') }); }
+    }
+  }
+  params.factor_ag_au = params.ratio_resp;          // compatibilidad con la maqueta
+  params.ratio_prom = ratio_prom;
+  return { DATA: { unidad: 'Namiquipa', empresa: 'Minera Tasmania, S.A. de C.V.', params, dias, horario, patios, historico,
+    meta: { archivo: nombreArchivo || null, leido: new Date().toISOString(), lector: LECTOR_VERSION, limpiezas } }, avisos };
+}
+
+/* =====================================================================
+   TABLERO (diseño de la maqueta v2 aprobada) — se pinta con un objeto DATA
+   ===================================================================== */
+Chart.register(ChartDataLabels);
+Chart.defaults.font.family = 'Segoe UI,Roboto,Arial,sans-serif';
+Chart.defaults.plugins.datalabels.display = false;
+Chart.defaults.maintainAspectRatio = false;
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+const C = { navy: '#1F3864', dep: '#2E5E4E', au: '#C9A227', ag: '#9E9E9E', sol: '#2E75B6', ok: '#1E8449', warn: '#D68910', bad: '#C0392B', neu: '#C8CDD5', ref: '#7F8C9A' };
+const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const fF = s => { if (!s) return ''; const [a, m, d] = s.split('-'); return (+d) + '-' + MES[+m - 1] + '-' + a.slice(2) };
+const fP = p => p ? MES[+p.slice(5, 7) - 1] + '-' + p.slice(2, 4) : '';
+const fD = s => (+s.split('-')[2]);
+const fFH = iso => { if (!iso) return ''; const d = new Date(iso); return `${d.getDate()}-${MES[d.getMonth()]}-${String(d.getFullYear()).slice(2)} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` };
+const n = (x, dec = 0) => x == null || isNaN(x) ? '–' : Number(x).toLocaleString('es-MX', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const pc = (x, dec = 1) => x == null || isNaN(x) ? '–' : (x * 100).toFixed(dec) + '%';
+const sum = (a, f) => a.reduce((s, x) => s + (f(x) || 0), 0);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $ = id => document.getElementById(id);
+const charts = {};
+function mk(id, cfg) { if (charts[id]) charts[id].destroy(); charts[id] = new Chart($(id), cfg); }
+const sem = r => r == null ? 'neu' : r >= 1 ? 'ok' : r >= 0.9 ? 'warn' : 'bad';
+const semTxt = { ok: 'CUMPLE', warn: 'CERCA', bad: 'DEBAJO', neu: 'SIN META' };
+const K = (cls, l, v, nn, st) => `<div class="k ${cls}"><div class="l">${l}</div><div class="v">${v}</div><div class="n">${nn || ''}</div>${cls !== 'vacio' ? `<span class="st">${st || semTxt[cls] || ''}</span>` : ''}</div>`;
+const tagE = '<span class="tag est">estimado</span>', tagC = '<span class="tag cap">por capturar</span>';
+function efPond(rows, k) { let num = 0, den = 0; (rows || []).forEach(r => { const c = r['cab_' + k], t = r['cola_' + k], m = r.m3; if (c != null && t != null && m) { num += (c - t) * m; den += c * m; } }); return den ? num / den : null; }
+const avg = (a, f) => { const v = a.map(f).filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null };
+
+/* opciones: { puede(p), meta:{updated_at, subido_por}, local } */
+function tablero(DATA, opc) {
+  const puede = opc.puede;
+  /* METAS: se capturarán en Admin. null = "por definir" → semáforo gris, nunca se inventa */
+  const METAS = { dep_mes: DATA.params.meta_mes, ef_au: null, ef_ag: null, oz_au_dia: null, oz_ag_dia: null, h_paro_dia: null, riego_m3h: 250 };
+  const P = DATA.params;
+  const dias = DATA.dias.filter(d => d && d.fecha);
+  dias.forEach(d => { d.dep = d.dep || {}; d.mc = d.mc || {}; });
+  const conDep = d => d.dep.ts > 0;
+  // un día de MC cuenta cuando ya tiene ensayes (el día en curso con horas sin ensaye no se cuenta todavía)
+  const conMC = d => d.mc.h > 0 && ((d.mc.cob_au || 0) > 0 || (d.mc.ozau || 0) > 0);
+  const conDato = dias.filter(d => conDep(d) || conMC(d));
+  if (!conDato.length) throw new Error('El mes no tiene días con depósito ni con Merrill-Crowe.');
+  const corte = conDato[conDato.length - 1].fecha;
+  const enCurso = dias.filter(d => d.fecha >= corte && d.mc.h > 0 && !conMC(d));
+  let acM = 0, acT = 0; const metaAc = {}, tsAc = {};
+  dias.forEach(d => { acM += d.dep.meta || 0; acT += d.dep.ts || 0; metaAc[d.fecha] = acM; tsAc[d.fecha] = acT; });
+  const esDom = f => new Date(f + 'T12:00').getDay() === 0;
+  const labelsMes = dias.map(d => fD(d.fecha));
+  const efDia = {}; Object.entries(DATA.horario || {}).forEach(([f, h]) => efDia[f] = { au: efPond(h, 'au'), ag: efPond(h, 'ag') });
+  dias.forEach(d => { if (!efDia[d.fecha]) efDia[d.fecha] = { au: d.mc.ef_au, ag: d.mc.ef_ag }; });
+  const ratioDia = d => d.dep.ratio || P.ratio_resp || P.factor_ag_au;
+  const aueqMC = d => d.mc.aueq != null ? d.mc.aueq : (d.mc.ozau || 0) + (d.mc.ozag || 0) / ratioDia(d);
+
+  const H = dias.filter(d => d.fecha <= corte), dDep = H.filter(conDep), dMC = H.filter(conMC);
+  const allH = Object.entries(DATA.horario || {}).filter(([k]) => k <= corte).flatMap(([k, v]) => v);
+  const T = { th: sum(H, d => d.dep.th), ts: sum(H, d => d.dep.ts), ozau: sum(dMC, d => d.mc.ozau), ozag: sum(dMC, d => d.mc.ozag), m3: sum(dMC, d => d.mc.m3), h: sum(dMC, d => d.mc.h),
+    hop: sum(dDep, d => d.dep.hop), hparo: sum(dDep, d => d.dep.hparo), aueq: sum(dMC, aueqMC), aueqDep: sum(dDep, d => d.dep.aueq) };
+  T.efau = efPond(allH, 'au'); T.efag = efPond(allH, 'ag');
+  const simple = { au: (() => { const c = avg(allH, r => r.cab_au), t = avg(allH, r => r.cola_au); return c ? (c - t) / c : null })(), ag: (() => { const c = avg(allH, r => r.cab_ag), t = avg(allH, r => r.cola_ag); return c ? (c - t) / c : null })() };
+  const progTr = H.filter(d => d.dep.meta).length, progRest = dias.filter(d => d.fecha > corte && d.dep.meta).length;
+  const ritmo = progTr ? T.ts / progTr : 0, proy = T.ts + ritmo * progRest;
+  const nMC = Math.max(dMC.length, 1);
+
+  $('subt').textContent = `${DATA.empresa} · Unidad Namiquipa · Periodo ${fP(P.periodo)} · corte ${fF(corte)}`;
+  $('upd').textContent = opc.local ? `Archivo: ${DATA.meta && DATA.meta.archivo || ''}` : (opc.meta && opc.meta.updated_at ? `Última carga del RO: ${fFH(opc.meta.updated_at)}` : '');
+  $('pie').textContent = `Flash de Planta Namiquipa · datos del archivo RO ${fP(P.periodo)} (corte ${fF(corte)}) · uso interno`;
+  if (enCurso.length) { const e = enCurso[enCurso.length - 1]; $('enCurso').style.display = 'block'; $('enCurso').textContent = `Merrill-Crowe del ${fF(e.fecha)} en curso (${n(e.mc.h)} h, sin ensayes todavía): no se cuenta hasta que tenga ensayes.`; }
+  else $('enCurso').style.display = 'none';
+
+  const sel = $('dia'); sel.innerHTML = '';
+  conDato.slice().reverse().forEach(d => { const o = document.createElement('option'); o.value = d.fecha; o.textContent = fF(d.fecha) + (esDom(d.fecha) ? ' (dom)' : ''); sel.appendChild(o) });
+  sel.value = corte; $('lblDia').classList.remove('oculto');
+
+  /* ============ RENDER DEL DÍA ============ */
+  function render() {
+    const f = sel.value, d = dias.find(x => x.fecha == f), dep = d.dep, mc = d.mc, prog = !!dep.meta;
+    const mcOk = conMC(d);
+    $('r-dia').textContent = fF(f); $('m-dia').textContent = fF(f);
+    const prAu = T.ozau / nMC, prAg = T.ozag / nMC, ef = efDia[f] || {};
+    const rDep = prog && dep.ts != null ? dep.ts / dep.meta : prog ? 0 : null;
+    const sDep = prog ? sem(rDep) : 'neu';
+    const hp = dep.hparo || 0, hTot = (dep.hop || 0) + hp;
+    const vsProm = (x, p) => { if (!x || !p) return ''; const r = x / p - 1; return `${r >= 0 ? '▲' : '▼'} ${Math.abs(r * 100).toFixed(0)}% vs promedio del mes` };
+    const sParo = prog && METAS.h_paro_dia ? (hp <= METAS.h_paro_dia ? 'ok' : 'bad') : 'neu';
+    $('hero').innerHTML =
+      K(sDep, 'Depósito (t secas)', prog || dep.ts ? n(dep.ts) : '–', prog ? `${pc(rDep, 0)} de la meta diaria (${n(dep.meta)} t)` : 'Día no programado', prog ? null : 'NO PROG.') +
+      K(mcOk ? (METAS.oz_au_dia ? sem(mc.ozau / METAS.oz_au_dia) : 'neu') : 'neu', 'Oro recuperado', mcOk ? n(mc.ozau, 2) + ' <small>oz</small>' : '–', mcOk ? vsProm(mc.ozau, prAu) : (mc.h ? 'MC en curso, sin ensayes' : 'MC sin operar')) +
+      K(mcOk ? (METAS.oz_ag_dia ? sem(mc.ozag / METAS.oz_ag_dia) : 'neu') : 'neu', 'Plata recuperada', mcOk ? n(mc.ozag, 0) + ' <small>oz</small>' : '–', mcOk ? vsProm(mc.ozag, prAg) : '') +
+      K(METAS.ef_au && ef.au != null ? sem(ef.au / METAS.ef_au) : 'neu', 'Eficiencia MC Au / Ag', mcOk && ef.au != null ? `${pc(ef.au, 0)} <small>/ ${pc(ef.ag, 0)}</small>` : '–', mc.h ? `${n(mc.h)} h · ${n(mc.m3)} m³ · ${n(mc.flujo, 0)} m³/h` : '') +
+      K(sParo, 'Paro depósito', prog ? n(hp, 1) + ' <small>h</small>' : '–', prog ? `${pc(hTot ? hp / hTot : 0, 0)} del turno · ${esc(dep.causa || 'sin causa capturada')}` : '', prog ? null : 'NO PROG.');
+    const imp = [];
+    if (prog && dep.ts != null) { const c = sem(rDep); imp.push([c, `<b>Depósito ${n(dep.ts)} t secas</b> (${pc(rDep, 0)} de meta)${dep.hparo ? ` con ${n(dep.hparo, 1)} h de paro` : ''}${dep.com ? `: <i>${esc(dep.com.toLowerCase())}</i>` : ''}.`]); }
+    else imp.push(['neu', `Depósito: día no programado.`]);
+    if (mcOk) {
+      const lista = dMC.map(x => (efDia[x.fecha] || {}).au).filter(x => x != null).sort((a, b) => b - a);
+      const rank = lista.indexOf(ef.au) + 1;
+      imp.push([rank === 1 ? 'ok' : 'neu', `<b>MC ${n(mc.h)} h</b>, ${n(mc.m3)} m³: <b>${n(mc.ozau, 2)} oz Au</b> y <b>${n(mc.ozag)} oz Ag</b>. Eficiencia Au ${pc(ef.au, 0)}${rank === 1 ? ' — <b>la mejor del mes</b>' : rank > 0 ? ` (lugar ${rank} de ${lista.length} días)` : ''}.`]);
+    } else if (mc.h) imp.push(['neu', `MC con ${n(mc.h)} h y sin ensayes todavía.`]);
+    const var_ = tsAc[f] - metaAc[f];
+    imp.push([var_ >= 0 ? 'ok' : 'bad', `Mes al ${fF(f)}: <b>${var_ >= 0 ? '+' : ''}${n(var_)} t</b> contra la meta acumulada (${n(tsAc[f])} de ${n(metaAc[f])} t).`]);
+    $('imp').innerHTML = imp.map(([c, t]) => `<li class="${c}">${t}</li>`).join('');
+    renderVars(f); renderPhone(f, imp);
+  }
+
+  /* ============ ESTÁTICO (mes) ============ */
+  function estatico() {
+    const mA = metaAc[corte], var_ = T.ts - mA, rMes = mA ? T.ts / mA : null;
+    $('leg').innerHTML = `<span>Real al corte: <b>${n(T.ts)} t</b></span><span>Meta al corte: <b>${n(mA)} t</b></span><span>Meta del mes: <b>${n(P.meta_mes)} t</b></span><span>Proyección de cierre: <b>${n(proy)} t</b> ${tagE}</span>`;
+    const w = x => Math.min(100, x / P.meta_mes * 100);
+    $('bar').innerHTML = `<div class="fill" style="width:${w(T.ts)}%;background:${C[sem(rMes)]}"></div><div class="pj" style="left:${w(T.ts)}%;width:${Math.max(0, w(proy) - w(T.ts))}%"></div><div class="mk" style="left:${w(mA)}%"><span>meta al corte</span></div>`;
+    $('barn').innerHTML = `Barra sólida = real · punteada = proyección al ritmo actual (${n(ritmo)} t por día programado × ${progRest} días programados restantes). Meta por día programado: ${n(P.meta_mes)} t ÷ ${n(P.dias_prog)} días = ${n(P.meta_dia)} t/día.`;
+    $('k-mes').innerHTML =
+      K(sem(rMes), 'Depósito vs meta al corte', (var_ >= 0 ? '+' : '') + n(var_) + ' <small>t</small>', `${pc(rMes, 1)} de la meta al corte`) +
+      K('neu', 'Oro recuperado (mes)', n(T.ozau, 2) + ' <small>oz</small>', `${dMC.length} días de MC · presupuesto en oz por definir`) +
+      K('neu', 'Plata recuperada (mes)', n(T.ozag, 0) + ' <small>oz</small>', `${n(T.ozag / nMC)} oz por día operado`) +
+      K('neu', 'Eficiencia MC Au / Ag', `${pc(T.efau, 0)} <small>/ ${pc(T.efag, 0)}</small>`, `ponderada por flujo · Excel (prom. simple): ${pc(simple.au, 1)} / ${pc(simple.ag, 1)}`);
+    mk('c-r-acum', { type: 'bar', data: { labels: labelsMes, datasets: [
+      { type: 'line', label: 'Meta acumulada', data: dias.map(d => metaAc[d.fecha]), borderColor: '#9aa3b0', borderDash: [5, 4], pointRadius: 0, borderWidth: 2 },
+      { label: 'Real acumulado', data: dias.map(d => d.fecha <= corte ? tsAc[d.fecha] : null), backgroundColor: dias.map(d => tsAc[d.fecha] >= metaAc[d.fecha] ? C.ok : C.bad) }] },
+      options: { scales: { y: { beginAtZero: true, ticks: { callback: v => n(v) } } }, plugins: { tooltip: { callbacks: { label: c => c.dataset.label + ': ' + n(c.raw) + ' t' } } } } });
+    mk('c-r-oz', { type: 'bar', data: { labels: labelsMes, datasets: [
+      { label: 'oz Au', data: dias.map(d => conMC(d) ? d.mc.ozau : null), backgroundColor: C.au, yAxisID: 'y' },
+      { label: 'oz Ag', data: dias.map(d => conMC(d) ? d.mc.ozag : null), backgroundColor: C.ag, yAxisID: 'y2' }] },
+      options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'oz Au' } }, y2: { position: 'right', beginAtZero: true, grid: { display: false }, title: { display: true, text: 'oz Ag' } } } } });
+
+    /* ---- DEPÓSITO ---- */
+    const kg = k => T.ts ? sum(dDep, d => (d.dep[k] || 0) * d.dep.ts) / T.ts : null;
+    const rProm = dDep.length ? (T.ts / dDep.length) / P.meta_dia : null;
+    $('k-dep').innerHTML =
+      K(sem(rMes), 't secas acumuladas', n(T.ts), `${n(T.th)} t húmedas · humedad ${pc(T.th ? 1 - T.ts / T.th : null)}`) +
+      K(sem(rProm), 'Promedio por día depositado', n(dDep.length ? T.ts / dDep.length : null) + ' <small>t</small>', `meta ${n(P.meta_dia)} t · ${dDep.length} días`) +
+      K('neu', 'Ritmo', n(T.hop ? T.ts / T.hop : null) + ' <small>t/h</small>', `${n(T.hop, 1)} h operadas`) +
+      K('neu', 'Horas de paro', n(T.hparo, 1) + ' <small>h</small>', `${pc(T.hop + T.hparo ? T.hparo / (T.hop + T.hparo) : null, 0)} del tiempo de turno (sin domingos)`) +
+      K('neu', 'Cal / cemento', `${n(kg('cal'), 1)} / ${n(kg('cem'), 1)} <small>kg/t</small>`, `reactivo ${n(kg('rea'), 2)} kg/t · ref. diseño 15 / 15 / 1`);
+    mk('c-d-dia', { type: 'bar', data: { labels: labelsMes, datasets: [
+      { type: 'line', label: 'Meta diaria', data: dias.map(d => d.dep.meta || null), borderColor: '#333', borderDash: [5, 4], pointRadius: 0, borderWidth: 1.5 },
+      { label: 't secas', data: dias.map(d => d.dep.ts || null), backgroundColor: dias.map(d => d.dep.meta ? C[sem(d.dep.ts / d.dep.meta)] : C.neu),
+        datalabels: { display: true, anchor: 'end', align: 'top', font: { size: 10 }, formatter: v => v ? n(v) : '' } }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, suggestedMax: 2000 } } } });
+    mk('c-d-horas', { type: 'bar', data: { labels: labelsMes, datasets: [
+      { label: 'Horas operadas', data: dias.map(d => d.dep.hop), backgroundColor: C.dep, stack: 'h' },
+      { label: 'Horas de paro', data: dias.map(d => d.dep.meta ? d.dep.hparo : null), backgroundColor: C.bad, stack: 'h' },
+      { label: 'No programado', data: dias.map(d => !d.dep.meta ? d.dep.hparo : null), backgroundColor: C.neu, stack: 'h' }] },
+      options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'h' } } } } });
+    const causas = {};
+    dDep.filter(d => d.dep.hparo > 0).forEach(d => { const c = d.dep.causa || 'Sin causa capturada'; causas[c] = (causas[c] || 0) + d.dep.hparo });
+    const cs = Object.entries(causas).sort((a, b) => b[1] - a[1]);
+    mk('c-d-pareto', { type: 'bar', data: { labels: cs.map(x => x[0]), datasets: [{ data: cs.map(x => x[1]), backgroundColor: cs.map(x => x[0].startsWith('Sin') ? C.warn : C.bad),
+      datalabels: { display: true, anchor: 'end', align: 'right', formatter: v => n(v, 1) + ' h · ' + pc(T.hparo ? v / T.hparo : null, 0) } }] },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grace: '30%' } } } });
+    const refL = (v, lab, col) => ({ type: 'line', label: lab, data: dias.map(() => v), borderColor: col, borderDash: [3, 3], pointRadius: 0, borderWidth: 1 });
+    mk('c-d-reac', { type: 'line', data: { labels: labelsMes, datasets: [
+      { label: 'Cal', data: dias.map(d => d.dep.ts ? d.dep.cal : null), borderColor: C.navy, backgroundColor: C.navy, spanGaps: true },
+      { label: 'Cemento', data: dias.map(d => d.dep.ts ? d.dep.cem : null), borderColor: '#E67E22', backgroundColor: '#E67E22', spanGaps: true },
+      refL(15, 'Ref. 15 kg/t', C.ref)] },
+      options: { scales: { y: { beginAtZero: true, suggestedMax: 20, title: { display: true, text: 'kg/t' } } } } });
+    let tp = '<tr><th class="tl">Fecha</th><th>Patio</th><th>h op.</th><th>h paro</th><th>t secas</th><th>vs meta</th><th class="tl">Causa</th><th class="tl">Comentario</th></tr>';
+    H.filter(d => d.dep.hop || d.dep.hparo).slice().reverse().forEach(d => { const p = d.dep, prog = !!p.meta, r = prog ? (p.ts || 0) / p.meta : null;
+      tp += `<tr><td>${fF(d.fecha)}</td><td>${p.patio ?? ''}</td><td>${n(p.hop, 1)}</td><td>${n(p.hparo, 1)}</td><td>${n(p.ts)}</td><td>${prog ? `<span class="chip ${sem(r)}">${pc(r, 0)}</span>` : '<span class="chip neu">no prog.</span>'}</td><td class="tl">${p.causa ? esc(p.causa) : (prog && p.hparo ? '<span class="chip warn">sin causa</span>' : '')}</td><td class="tl">${esc(p.com || '')}</td></tr>` });
+    $('t-paros').innerHTML = tp;
+
+    /* ---- MC ---- */
+    $('k-mc').innerHTML =
+      K('neu', 'Oro recuperado', n(T.ozau, 2) + ' <small>oz</small>', `${n(T.ozau / nMC, 2)} oz por día operado`) +
+      K('neu', 'Plata recuperada', n(T.ozag, 0) + ' <small>oz</small>', `${n(T.ozag / nMC)} oz por día operado`) +
+      K('neu', 'Solución procesada', n(T.m3) + ' <small>m³</small>', `${n(T.h ? T.m3 / T.h : null, 1)} m³/h promedio · ${n(T.h)} h`) +
+      K('neu', 'Eficiencia Au', pc(T.efau, 1), `ponderada por flujo · prom. simple ${pc(simple.au, 1)}`) +
+      K('neu', 'Eficiencia Ag', pc(T.efag, 1), `ponderada por flujo · prom. simple ${pc(simple.ag, 1)}`);
+    const ratioProm = T.aueq > T.ozau ? T.ozag / (T.aueq - T.ozau) : null;
+    $('aueqNota').textContent = `oz Au + oz Ag ÷ ratio Ag/Au del día (precios Au y Ag capturados en BD DEP${P.tipo_precio ? ' · ' + P.tipo_precio : ''}) · no se mezcla con onzas depositadas`;
+    $('k-aueq').innerHTML =
+      K('neu', 'Au eq recuperado (mes)', n(T.aueq, 2) + ' <small>oz</small>', `${n(T.aueq / nMC, 2)} oz Au eq por día operado`) +
+      K('neu', 'Ratio Ag/Au promedio', n(ratioProm, 2), `ratio de respaldo ${n(P.ratio_resp, 2)} (días sin precio)`) +
+      K('neu', 'Au eq depositado (mes)', n(T.aueqDep, 1) + ' <small>oz</small>', `${tagE} con ley provisional donde aplique`);
+    const acum = k => { let s = 0; return dias.map(d => { if (d.fecha > corte) return null; s += conMC(d) ? (d.mc[k] || 0) : 0; return s > 0 ? s : null }) };
+    const dual = (k, col, lab, dec) => ({ type: 'bar', data: { labels: labelsMes, datasets: [
+      { label: lab + ' por día', data: dias.map(d => conMC(d) ? d.mc[k] : null), backgroundColor: col },
+      { type: 'line', label: 'Acumulado', data: acum(k), borderColor: C.navy, backgroundColor: C.navy, pointRadius: 2, yAxisID: 'y2', spanGaps: true }] },
+      options: { plugins: { tooltip: { callbacks: { label: c => c.dataset.label + ': ' + n(c.raw, dec) } } }, scales: { y: { beginAtZero: true }, y2: { position: 'right', beginAtZero: true, grid: { display: false } } } } });
+    mk('c-m-au', dual('ozau', C.au, 'oz Au', 2)); mk('c-m-ag', dual('ozag', C.ag, 'oz Ag', 0));
+    mk('c-m-sol', { type: 'bar', data: { labels: labelsMes, datasets: [
+      { label: 'm³', data: dias.map(d => d.mc.h ? d.mc.m3 : null), backgroundColor: C.sol },
+      { type: 'line', label: 'm³/h', data: dias.map(d => d.mc.h ? d.mc.flujo : null), borderColor: C.navy, backgroundColor: C.navy, yAxisID: 'y2', spanGaps: true }] },
+      options: { scales: { y: { beginAtZero: true }, y2: { position: 'right', beginAtZero: true, grid: { display: false } } } } });
+    mk('c-m-ef', { type: 'line', data: { labels: labelsMes, datasets: [
+      { label: 'Eficiencia Au', data: dias.map(d => conMC(d) && efDia[d.fecha].au != null ? efDia[d.fecha].au * 100 : null), borderColor: C.au, backgroundColor: C.au, spanGaps: true, pointRadius: 4 },
+      { label: 'Eficiencia Ag', data: dias.map(d => conMC(d) && efDia[d.fecha].ag != null ? efDia[d.fecha].ag * 100 : null), borderColor: C.ag, backgroundColor: C.ag, spanGaps: true, pointRadius: 4 }] },
+      options: { scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }, plugins: { tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.raw.toFixed(1) + '%' } } } } });
+    let tm = '<tr><th class="tl">Día</th><th>oz Au</th><th>oz Ag</th><th>Au eq</th><th>m³</th><th>m³/h</th><th>h</th><th>Cab. Au</th><th>Cola Au</th><th>Efic. Au</th><th>Cab. Ag</th><th>Cola Ag</th><th>Efic. Ag</th><th>Ensaye Au / Ag</th></tr>';
+    dMC.slice().reverse().forEach(d => { const m = d.mc, e = efDia[d.fecha]; tm += `<tr><td>${fF(d.fecha)}</td><td>${n(m.ozau, 2)}</td><td>${n(m.ozag)}</td><td>${n(aueqMC(d), 1)}</td><td>${n(m.m3)}</td><td>${n(m.flujo, 1)}</td><td>${n(m.h)}</td><td>${n(m.cab_au, 3)}</td><td>${n(m.cola_au, 3)}</td><td>${pc(e.au)}</td><td>${n(m.cab_ag, 2)}</td><td>${n(m.cola_ag, 2)}</td><td>${pc(e.ag)}</td><td>${m.cob_au < 1 || m.cob_ag < 1 ? `<span class="chip warn">${pc(m.cob_au, 0)} / ${pc(m.cob_ag, 0)}</span>` : '<span class="chip ok">completo</span>'}</td></tr>` });
+    tm += `<tr class="tot"><td>Total</td><td>${n(T.ozau, 2)}</td><td>${n(T.ozag)}</td><td>${n(T.aueq, 1)}</td><td>${n(T.m3)}</td><td>${n(T.h ? T.m3 / T.h : null, 1)}</td><td>${n(T.h)}</td><td></td><td></td><td>${pc(T.efau)}</td><td></td><td></td><td>${pc(T.efag)}</td><td></td></tr>`;
+    $('t-mc').innerHTML = tm;
+
+    /* ---- PATIOS ---- */
+    const obj = ['1,500 ppm · 10–12 L/h·m²', '1,200 ppm · ~8 L/h·m²', '800 ppm · ~6 L/h·m²', 'Lavado'];
+    let tr = '<tr><th class="tl">Patio</th><th>Depósito (inicio – fin)</th><th>t secas</th><th>Inicio de riego</th><th>Días</th><th>Área regada m²</th><th>Flujo m³/h</th><th>NaCN ppm</th><th>pH</th><th class="tl">Objetivo por edad (ref.)</th><th>Estado</th></tr>';
+    (DATA.patios || []).forEach(p => { const act = p.ts > 0;
+      tr += `<tr><td>Patio ${p.patio}</td><td>${p.ini ? fF(p.ini) + ' – ' + (p.fin ? fF(p.fin) : '…') : '–'}</td><td>${act ? n(p.ts) : '–'}</td>${act ? '<td class="cap">capturar</td><td class="cap">auto</td><td class="cap">capturar</td><td class="cap">capturar</td><td class="cap">capturar</td><td class="cap">capturar</td><td class="tl" style="color:#5d6778;font-size:12px">mes 1: ' + obj[0] + '<br>mes 2: ' + obj[1] + '<br>mes 3: ' + obj[2] + '<br>mes 4: ' + obj[3] + '</td><td><span class="chip neu">por capturar</span></td>' : `<td>–</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td><td></td><td><span class="chip neu">${p.ini ? 'en preparación' : 'sin abrir'}</span></td>`}</tr>` });
+    $('t-rie').innerHTML = tr;
+    const ult = k => { for (const [f, h] of Object.entries(DATA.horario || {}).sort().reverse()) { for (const r of h.slice().reverse()) { if (r[k] != null) return [r[k], f, r.t] } } return null };
+    const pil = (lab, cap, k) => { const u = k ? ult(k) : null; return u ? K('neu', `Pileta ${lab}`, `${n(u[0], 1)} <small>m de nivel</small>`, `capacidad ${n(cap)} m³ · última lectura ${fF(u[1])} ${u[2]} · falta tabla nivel→m³`, 'DATO BD MC') : K('vacio', `Pileta ${lab}`, '— <small>m</small>', `capacidad ${n(cap)} m³ ${tagC}`) };
+    $('k-pil').innerHTML = pil('rica', 6000, 'niv_rica') + pil('barren', 6000, 'niv_barren') + pil('emergencia', 19600, null);
+    const pats = (DATA.patios || []).filter(p => p.ts > 0);
+    mk('c-p-pat', { type: 'bar', data: { labels: pats.map(p => 'Patio ' + p.patio), datasets: [{ data: pats.map(p => p.ts), backgroundColor: C.dep, datalabels: { display: true, anchor: 'end', align: 'top', formatter: v => n(v) + ' t' } }] }, options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grace: '12%' } } } });
+    mk('c-p-oz', { type: 'bar', data: { labels: pats.map(p => 'Patio ' + p.patio), datasets: [
+      { label: 'oz Au', data: pats.map(p => p.ozau), backgroundColor: C.au, yAxisID: 'y' },
+      { label: 'oz Ag', data: pats.map(p => p.ozag), backgroundColor: C.ag, yAxisID: 'y2' }] },
+      options: { scales: { y: { beginAtZero: true, title: { display: true, text: 'oz Au' } }, y2: { position: 'right', beginAtZero: true, grid: { display: false }, title: { display: true, text: 'oz Ag' } } } } });
+  }
+
+  /* ============ VARIABLES MC: una gráfica por variable ============ */
+  function renderVars(f) {
+    const hr = (DATA.horario || {})[f] || []; const lb = hr.map(r => r.t);
+    const V = [['od', 'Oxígeno disuelto', 'mg/L', C.sol], ['zn', 'Zinc', 'g/min', C.navy], ['vac', 'Vacío torre', 'inHg', '#E67E22'], ['nacn_rica', 'NaCN solución rica', 'ppm', C.dep]];
+    $('vars').innerHTML = V.map(([k, l, u]) => { const c = hr.filter(r => r[k] != null).length; return `<div class="card"><h3>${l} <span style="font-weight:400;color:#5d6778">(${u})</span></h3><div class="q">${c} de ${hr.length} h capturadas · rango objetivo: <b>por definir</b></div><div class="cv s"><canvas id="v-${k}"></canvas></div></div>` }).join('');
+    V.forEach(([k, l, u, col]) => mk('v-' + k, { type: 'line', data: { labels: lb, datasets: [{ data: hr.map(r => r[k]), borderColor: col, backgroundColor: col, pointRadius: 2, spanGaps: true }] },
+      options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 6, font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } } } }));
+  }
+
+  /* ============ VISTA CELULAR ============ */
+  function renderPhone(f, imp) {
+    const d = dias.find(x => x.fecha == f), dep = d.dep, mc = d.mc, prog = !!dep.meta, ef = efDia[f] || {}, mcOk = conMC(d);
+    const rDep = prog ? (dep.ts || 0) / dep.meta : null, rMes = metaAc[f] ? tsAc[f] / metaAc[f] : null;
+    const w = x => Math.min(100, x / P.meta_mes * 100);
+    $('phone').innerHTML = `<div class="ph"><b>Flash Namiquipa · ${fF(f)}</b><div>Depósito día calendario · MC 07:00–06:59 · uso interno</div></div>
+    <div class="pb"><div class="g2">
+     ${K(prog ? sem(rDep) : 'neu', 'Depósito', prog || dep.ts ? n(dep.ts) + ' <small>t</small>' : '–', prog ? pc(rDep, 0) + ' de meta' : 'no programado', prog ? null : 'NO PROG.')}
+     ${K('neu', 'Oro', mcOk ? n(mc.ozau, 2) + ' <small>oz</small>' : '–', mcOk ? n(mc.h) + ' h de MC' : 'MC sin ensayes')}
+     ${K('neu', 'Plata', mcOk ? n(mc.ozag) + ' <small>oz</small>' : '–', mcOk ? n(mc.m3) + ' m³' : '')}
+     ${K('neu', 'Efic. Au / Ag', mcOk && ef.au != null ? pc(ef.au, 0) + ' <small>/ ' + pc(ef.ag, 0) + '</small>' : '–', 'ponderada por flujo')}
+    </div>
+    <div style="margin:12px 2px 4px;font-size:12px;font-weight:700;color:#1F3864">MES AL CORTE · ${n(tsAc[f])} de ${n(metaAc[f])} t (${pc(rMes, 0)})</div>
+    <div class="bar" style="margin:6px 0 10px;height:14px"><div class="fill" style="width:${w(tsAc[f])}%;background:${C[sem(rMes)]}"></div><div class="mk" style="left:${w(metaAc[f])}%;top:-4px;height:22px"></div></div>
+    <ul class="lst">${imp.map(([c, t]) => `<li class="${c}">${t}</li>`).join('')}</ul></div>
+    <div class="pf">Generado del RO · corte ${fF(f)} · uso interno</div>`;
+  }
+
+  sel.onchange = render;
+  estatico(); render();
+  return { corte, T, dias, conMC };
+}
+
+/* ============ CALIDAD DE DATOS (Admin) ============ */
+function calidadDatos(DATA) {
+  const out = [], dias = DATA.dias, hor = DATA.horario || {};
+  const fuera = (r, med) => r.cab_au != null && med && r.cab_au > 2 * med;
+  let ozOut = 0, lst = [];
+  Object.entries(hor).forEach(([f, hr]) => { const v = hr.map(r => r.cab_au).filter(x => x != null).sort((a, b) => a - b); const med = v[Math.floor(v.length / 2)];
+    hr.forEach(r => { if (fuera(r, med)) { ozOut += r.ozau || 0; lst.push(`${fF(f)} ${r.t} (cabeza ${r.cab_au} ppm vs ~${med.toFixed(2)} típico)`) } }) });
+  const ozMes = sum(dias, d => d.mc.ozau);
+  if (lst.length) out.push([1, `${lst.length} horas con cabeza de Au fuera de rango suman ${n(ozOut, 2)} oz Au (${pc(ozMes ? ozOut / ozMes : null, 0)} del oro del mes)`, `Horas: ${lst.join(' · ')}. Pueden ser errores de captura y estarían inflando las onzas de oro.`]);
+  const prov = dias.filter(d => d.dep.ley_prov);
+  if (prov.length) out.push([1, `${prov.length} días con ley de depósito provisional (celda amarilla en BD DEP)`, `${prov.map(d => fF(d.fecha) + ' (' + d.dep.au + ' / ' + d.dep.ag + ')').join(', ')}. Las oz depositadas de esos días son estimadas hasta recibir laboratorio.`]);
+  const hum10 = dias.filter(d => d.dep.ts > 0 && d.dep.hum === 0.1);
+  if (hum10.length) out.push([2, `${hum10.length} ${hum10.length === 1 ? 'día' : 'días'} con humedad exactamente 10 %`, `${hum10.map(d => fF(d.fecha)).join(', ')}. Parece valor provisional; revisar con laboratorio.`]);
+  const baja = dias.filter(d => d.mc.h > 0 && (d.mc.cob_au < 1 || d.mc.cob_ag < 1));
+  if (baja.length) out.push([2, `${baja.length} días de Merrill-Crowe con horas sin ensaye`, `${baja.map(d => fF(d.fecha) + ' (Au ' + pc(d.mc.cob_au, 0) + ')').join(', ')}. En esas horas no se suman onzas: cifras conservadoras.`]);
+  const pDep = [...new Set(dias.filter(d => d.dep.ts > 0).map(d => d.dep.patio))];
+  const p3 = (DATA.patios || []).filter(p => p.ini && !(p.ts > 0) && !pDep.includes(p.patio));
+  if (p3.length) out.push([2, 'Patio activo no coincide entre hojas', `BD DEP dice patio ${pDep.join(', ')}; en Resumen por patio aparece ${p3.map(p => 'el patio ' + p.patio + ' con inicio ' + fF(p.ini) + ' y 0 t').join(', ')}.`]);
+  const todas = Object.values(hor).flat(), odH = todas.filter(r => r.od != null).length, cnH = todas.filter(r => r.nacn_rica != null || r.nacn_sc != null).length;
+  if (todas.length && (odH < todas.length || cnH < todas.length)) out.push([2, 'Variables de operación de MC incompletas', `De ${todas.length} horas con flujo, O.D. tiene dato en ${odH} y NaCN en ${cnH}.`]);
+  const lim = (DATA.meta && DATA.meta.limpiezas) || [];
+  if (lim.length) out.push([3, `${lim.length} celdas con texto donde va número`, lim.slice(0, 10).map(x => `${x.hoja} ${x.celda}: "${esc(x.valor)}"`).join(' · ') + (lim.length > 10 ? ' …' : '') + '. El Flash las limpió; en el Excel no suman ni grafican.']);
+  const dif = Object.entries(hor).flatMap(([f, hr]) => hr.filter(r => r.m3e && r.m3 && Math.abs(r.m3e - r.m3) / r.m3 > 0.3).map(r => fF(f) + ' ' + r.t + ' (' + n(r.m3e, 1) + ' vs ' + n(r.m3, 1) + ')'));
+  if (dif.length) out.push([3, `${dif.length} horas con diferencia mayor a 30 % entre flujómetro de entrada y de salida`, dif.slice(0, 8).join(' · ') + (dif.length > 8 ? ' …' : '') + '. Las onzas se calculan con el de salida.']);
+  const sinPrecio = dias.filter(d => (d.dep.ts > 0 || d.mc.h > 0) && d.dep.pau == null);
+  if (sinPrecio.length) out.push([3, `${sinPrecio.length} ${sinPrecio.length === 1 ? 'día operado' : 'días operados'} sin precio Au/Ag capturado`, `${sinPrecio.map(d => fF(d.fecha)).join(', ')}. Usan el ratio del día anterior o el de respaldo.`]);
+  if (!out.length) out.push([3, 'Sin observaciones', 'No se encontró nada fuera de lo normal en este archivo.']);
+  return out;
+}
+
+/* =====================================================================
+   APP: inicio de sesión (Google · Supabase), permisos, meses, carga del RO y Admin
+   La seguridad real la pone la base (RLS): sin sesión y sin estar autorizado,
+   Supabase no entrega ningún dato aunque alguien tenga este archivo.
+   ===================================================================== */
+const CFG = {
+  url: 'https://uhooczxrftkoonpdmaiu.supabase.co',
+  key: 'sb_publishable_PaRCFaKuhT4Y5PMglWefsw_Mh8sggaA',          // Supabase → Project Settings → API Keys → Publishable key (es pública; la secret NUNCA va aquí)
+  dominio: 'mrtcorporativo.mx',
+  flash: 'planta',
+};
+const LOCAL = location.protocol === 'file:';
+const AUTH = { email: null, nombre: null, perm: {} };
+const puede = p => LOCAL || !!(AUTH.perm.admin || AUTH.perm[p]);
+let sb = null, DATA_ACTUAL = null, MESES = [];
+
+/* ---------- pantalla de estado ---------- */
+function pantalla(tit, txt, accionesHTML, msg, mal) {
+  $('pantalla').classList.remove('oculto'); $('nav').classList.add('oculto'); $('main').classList.add('oculto');
+  $('pTit').textContent = tit; $('pTxt').innerHTML = txt || ''; $('pAcc').innerHTML = accionesHTML || '';
+  $('pMsg').textContent = msg || ''; $('pMsg').className = 'msg' + (mal ? ' mal' : '');
+}
+const pMsg = (t, mal) => { $('pMsg').textContent = t || ''; $('pMsg').className = 'msg' + (mal ? ' mal' : t ? ' bien' : ''); };
+const GLOGO = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+
+function mostrarTablero(DATA, meta) {
+  $('pantalla').classList.add('oculto'); $('nav').classList.remove('oculto'); $('main').classList.remove('oculto');
+  document.querySelectorAll('.solo-admin').forEach(e => e.classList.toggle('oculto', !puede('admin')));
+  document.querySelectorAll('.solo-exportar').forEach(e => e.classList.toggle('oculto', !puede('planta_exportar')));
+  DATA_ACTUAL = DATA;
+  try { tablero(DATA, { puede, meta, local: LOCAL }); }
+  catch (e) { console.error(e); pantalla('No se pudo mostrar el mes', esc(e.message), '', '', true); return; }
+  if (puede('admin')) pintarCalidad();
+  ruta();
+}
+
+/* ---------- navegación por pestañas (#resumen, #deposito…) ---------- */
+function ruta() {
+  let h = (location.hash || '#resumen').slice(1);
+  if ((h === 'admin' && !puede('admin')) || (h === 'celular' && !puede('planta_exportar')) || !document.getElementById(h)) h = 'resumen';
+  document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id == h));
+  document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.getAttribute('href') == '#' + h));
+  Object.values(charts).forEach(c => c.resize()); window.scrollTo(0, 0);
+  if (h === 'admin' && !LOCAL) { cargarMeses(); }
+}
+window.addEventListener('hashchange', ruta);
+
+/* =================== CARGA DEL ARCHIVO RO =================== */
+function zonaArchivo(drop, input) {
+  drop.onclick = () => input.click();
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add('sobre'); };
+  drop.ondragleave = () => drop.classList.remove('sobre');
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('sobre'); if (e.dataTransfer.files[0]) procesarArchivo(e.dataTransfer.files[0]); };
+  input.onchange = () => { if (input.files[0]) procesarArchivo(input.files[0]); input.value = ''; };
+}
+let PENDIENTE = null;
+async function procesarArchivo(file) {
+  const destino = $('main').classList.contains('oculto') ? $('pMsg') : $('prev');
+  const aviso = (t, mal) => { if (destino === $('pMsg')) pMsg(t, mal); else destino.innerHTML = `<div class="aviso ${mal ? '' : 'b'}"><b>${esc(t)}</b></div>`; };
+  if (!/\.xls[xm]$/i.test(file.name)) { aviso('El archivo debe ser el Excel RO (.xlsx).', true); return; }
+  aviso('Leyendo ' + file.name + '…');
+  let res;
+  try { res = leerRO(new Uint8Array(await file.arrayBuffer()), file.name); }
+  catch (e) { console.error(e); aviso('No se pudo leer el archivo: ' + e.message, true); return; }
+  PENDIENTE = res.DATA;
+  if (LOCAL) { mostrarTablero(res.DATA, null); return; }
+  if (!puede('planta_subir')) { aviso('Tu cuenta no tiene permiso para subir el RO.', true); return; }
+  const D = res.DATA, P = D.params;
+  const T = { ts: sum(D.dias, d => d.dep.ts), au: sum(D.dias, d => d.mc.ozau), ag: sum(D.dias, d => d.mc.ozag) };
+  const ult = D.dias.filter(d => d.dep.ts > 0 || (d.mc.h > 0 && (d.mc.cob_au > 0 || d.mc.ozau > 0))).pop();
+  const existe = MESES.find(m => m.periodo === P.periodo);
+  let advertencia = '';
+  if (existe && existe.corte && ult && ult.fecha < existe.corte)
+    advertencia = `<div class="aviso"><b>Cuidado: este archivo llega hasta ${fF(ult.fecha)} y el guardado llega hasta ${fF(existe.corte)}.</b>Parece una copia más vieja. Si lo guardas, el mes se reemplaza completo con este archivo.</div>`;
+  const avisos = res.avisos.map(([t, a, b]) => `<div class="aviso ${t}"><b>${esc(a)}</b>${esc(b)}</div>`).join('');
+  const html = `<div class="box" style="margin-top:10px"><h3>Revisa antes de guardar</h3><table>
+    <tr><td>Archivo</td><td><b>${esc(file.name)}</b></td></tr>
+    <tr><td>Mes</td><td><b>${fP(P.periodo)}</b> ${existe ? '<span class="chip warn">ya existe: se reemplaza completo</span>' : '<span class="chip ok">mes nuevo</span>'}</td></tr>
+    <tr><td>Último día con datos</td><td><b>${ult ? fF(ult.fecha) : '–'}</b></td></tr>
+    <tr><td>t secas del mes</td><td>${n(T.ts)}</td></tr><tr><td>Oro / plata recuperados</td><td>${n(T.au, 2)} oz / ${n(T.ag)} oz</td></tr></table>
+    ${advertencia}${avisos}
+    <div class="form-linea" style="margin-top:10px"><button class="btn ok" id="bGuardar">Guardar ${fP(P.periodo)}</button><button class="btn sec" id="bCancelar">Cancelar</button></div><div class="msg" id="gMsg"></div></div>`;
+  if (destino === $('pMsg')) { $('pAcc').innerHTML = html; pMsg(''); } else destino.innerHTML = html;
+  $('bCancelar').onclick = () => { PENDIENTE = null; if (destino === $('pMsg')) $('pAcc').innerHTML = ''; else destino.innerHTML = ''; };
+  $('bGuardar').onclick = () => guardar(ult ? ult.fecha : null);
+}
+async function guardar(corte) {
+  const b = $('bGuardar'); b.disabled = true; $('gMsg').textContent = 'Guardando…'; $('gMsg').className = 'msg';
+  const D = PENDIENTE; D.meta.corte = corte; D.meta.subido_por = AUTH.email;
+  const { error } = await sb.from('planta_reportes').upsert({ periodo: D.params.periodo, data: D, subido_por: AUTH.email, updated_at: new Date().toISOString() }, { onConflict: 'periodo' });
+  if (error) { b.disabled = false; $('gMsg').textContent = 'No se guardó: ' + error.message; $('gMsg').className = 'msg mal'; return; }
+  $('gMsg').textContent = '✓ Guardado. Abriendo el mes…'; $('gMsg').className = 'msg bien';
+  setTimeout(() => { location.href = location.pathname + '?periodo=' + D.params.periodo; }, 700);
+}
+
+/* =================== SESIÓN Y DATOS =================== */
+async function entrar() {
+  pMsg('Abriendo Google…');
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname, queryParams: { prompt: 'select_account', hd: CFG.dominio } } });
+  if (error) pMsg('No se pudo abrir Google: ' + error.message, true);
+}
+async function salir() { try { await sb.auth.signOut(); } catch (e) { } location.replace(location.origin + location.pathname); }
+async function registrarAcceso(vista, nombre) {
+  try { await sb.rpc('flash_registrar_acceso', { p_flash: CFG.flash, p_vista: vista, p_nombre: nombre || AUTH.nombre || null }); } catch (e) { console.error('acceso', e); }
+}
+async function cargarMeses() {
+  const { data, error } = await sb.from('planta_reportes').select('periodo,updated_at,subido_por,data->meta->>corte').order('periodo', { ascending: false });
+  if (error) { console.error(error); return MESES; }
+  MESES = (data || []).map(r => ({ periodo: r.periodo, updated_at: r.updated_at, subido_por: r.subido_por, corte: r.corte }));
+  const t = $('t-meses');
+  if (t) t.innerHTML = '<tr><th class="tl">Mes</th><th>Último día</th><th>Última carga</th><th class="tl">Subido por</th><th></th></tr>' +
+    MESES.map(m => `<tr><td>${fP(m.periodo)}</td><td>${fF(m.corte) || '–'}</td><td>${fFH(m.updated_at)}</td><td class="tl">${esc(m.subido_por || '')}</td><td><a href="?periodo=${m.periodo}">ver</a></td></tr>`).join('');
+  return MESES;
+}
+async function iniciar() {
+  zonaArchivo($('drop'), $('archivo'));
+  $('btnSubir').onclick = () => $('archivo').click();
+  $('btnImg').onclick = descargarImagen;
+  document.querySelectorAll('#admTabs button').forEach(b => b.onclick = () => admTab(b.dataset.t));
+  if (LOCAL) {
+    $('modoLocal').classList.remove('oculto'); $('btnSubir').classList.remove('oculto');
+    pantalla('Flash de Planta · Namiquipa', 'Modo de prueba en esta computadora: arrastra aquí el Excel RO para verlo con el diseño del Flash. No se guarda nada.',
+      '<div class="drop" id="drop0"><b style="font-size:20px;letter-spacing:1px">ACTUALIZAR</b></div>');
+    zonaArchivo($('drop0'), $('archivo')); return;
+  }
+  if (!window.supabase || CFG.key.startsWith('PEGAR')) { pantalla('Falta configurar', 'Este archivo todavía no tiene la llave pública de Supabase (CFG.key).', '', '', true); return; }
+  sb = supabase.createClient(CFG.url, CFG.key);
+  let session = null;
+  try { ({ data: { session } } = await sb.auth.getSession()); } catch (e) { pantalla('Sin conexión', 'No se pudo revisar tu sesión: ' + esc(e.message), '', '', true); return; }
+  if (!session) {
+    pantalla('Flash de Planta · Namiquipa', 'Entra con tu cuenta de Google de la empresa.', `<button class="gbtn" id="bEntrar">${GLOGO} Entrar con Google</button>`);
+    $('bEntrar').onclick = entrar; return;
+  }
+  AUTH.email = String(session.user.email || '').toLowerCase();
+  const metaU = session.user.user_metadata || {};
+  pantalla('Flash de Planta · Namiquipa', 'Revisando tu acceso…');
+  const { data: yo, error } = await sb.from('flash_autorizados').select('*').eq('correo', AUTH.email).maybeSingle();
+  if (error) { pantalla('No se pudo revisar tu acceso', esc(error.message), '<button class="btn sec" id="bOtra">Usar otra cuenta</button>', '', true); $('bOtra').onclick = salir; return; }
+  if (!yo || !(yo.planta_ver || yo.admin)) {
+    await registrarAcceso('flash', metaU.full_name || metaU.name);
+    pantalla('Sin acceso', `La cuenta <b>${esc(AUTH.email)}</b> no tiene acceso al Flash de Planta Namiquipa. Si debes tenerlo, pídeselo al administrador.`, '<button class="btn sec" id="bOtra">Usar otra cuenta</button>', '', true);
+    $('bOtra').onclick = salir; return;
+  }
+  AUTH.perm = yo; AUTH.nombre = yo.nombre || metaU.full_name || metaU.name || null;
+  $('quien').innerHTML = `👤 ${esc(AUTH.nombre || AUTH.email)} <a id="aSalir">Salir</a>`; $('quien').classList.remove('oculto'); $('aSalir').onclick = salir;
+  if (puede('planta_subir')) $('btnSubir').classList.remove('oculto');
+  registrarAcceso('flash');
+  await cargarMeses();
+  if (!MESES.length) {
+    pantalla('Todavía no hay meses cargados', puede('planta_subir') ? 'Sube el Excel RO del mes para empezar.' : 'Cuando se suba el primer Excel RO aparecerá aquí.',
+      puede('planta_subir') ? '<div class="drop" id="drop0"><b style="font-size:20px;letter-spacing:1px">ACTUALIZAR</b></div>' : '');
+    if (puede('planta_subir')) zonaArchivo($('drop0'), $('archivo'));
+    return;
+  }
+  const pedido = new URLSearchParams(location.search).get('periodo');
+  const periodo = MESES.some(m => m.periodo === pedido) ? pedido : MESES[0].periodo;
+  const selM = $('mes'); selM.innerHTML = MESES.map(m => `<option value="${m.periodo}">${fP(m.periodo)}</option>`).join(''); selM.value = periodo;
+  selM.onchange = () => location.href = location.pathname + '?periodo=' + selM.value + location.hash;
+  if (MESES.length > 1) $('lblMes').classList.remove('oculto');
+  pantalla('Flash de Planta · Namiquipa', 'Cargando ' + fP(periodo) + '…');
+  const { data: fila, error: e2 } = await sb.from('planta_reportes').select('data,updated_at,subido_por').eq('periodo', periodo).single();
+  if (e2) { pantalla('No se pudo cargar el mes', esc(e2.message), '', '', true); return; }
+  mostrarTablero(fila.data, { updated_at: fila.updated_at, subido_por: fila.subido_por });
+}
+
+/* =================== ADMIN =================== */
+function admTab(t) {
+  document.querySelectorAll('#admTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  document.querySelectorAll('#admin [data-p]').forEach(p => p.classList.toggle('oculto', p.dataset.p !== t));
+  if (LOCAL) return;
+  if (t === 'usuarios') usrCargar();
+  if (t === 'accesos') accCargar();
+  if (t === 'carga') cargarMeses();
+}
+function pintarCalidad() {
+  $('l-cal').innerHTML = '<p class="nota" style="font-size:13px">Regla de oro: el balance manda. Esto no se corrige en el Flash, se corrige en el Excel y se vuelve a subir.</p>' +
+    calidadDatos(DATA_ACTUAL).map(([p, t, d]) => `<div class="aviso ${p == 1 ? '' : p == 2 ? 'm' : 'b'}"><b>${esc(t)}</b>${d}</div>`).join('');
+}
+const CAMPOS = [['planta_ver', 'Ver'], ['planta_exportar', 'Exportar'], ['planta_subir', 'Subir'], ['planta_buzon', 'Buzón'], ['admin', 'Admin']];
+const uMsg = (t, c) => { $('uMsg').textContent = t || ''; $('uMsg').className = 'msg' + (c ? ' ' + c : ''); };
+async function bitacora(que) { try { await sb.from('flash_autorizados_historial').insert({ por: AUTH.email, que: String(que).slice(0, 500) }); } catch (e) { } }
+async function usrCargar() {
+  const tb = $('t-usr'); tb.innerHTML = '<tr><td>Cargando…</td></tr>';
+  const { data, error } = await sb.from('flash_autorizados').select('*').order('correo');
+  if (error) { tb.innerHTML = '<tr><td>No se pudo leer la lista: ' + esc(error.message) + '</td></tr>'; return; }
+  tb.innerHTML = '<tr><th class="tl">Correo</th>' + CAMPOS.map(c => `<th>${c[1]}</th>`).join('') + '<th></th></tr>' + data.map(u => {
+    const yo = u.correo === AUTH.email;
+    return `<tr><td><b>${esc(u.correo)}</b>${yo ? ' (tú)' : ''}${u.nombre ? `<span class="n">${esc(u.nombre)}</span>` : ''}</td>` +
+      CAMPOS.map(([c]) => `<td><input type="checkbox" data-u="${esc(u.correo)}" data-c="${c}" ${u[c] ? 'checked' : ''} ${yo && (c === 'admin' || c === 'planta_ver') ? 'disabled title="No puedes quitarte esto a ti mismo"' : ''}></td>`).join('') +
+      `<td>${yo ? '' : `<button class="btn sec" data-quitar="${esc(u.correo)}">Quitar</button>`}</td></tr>`
+  }).join('');
+  tb.querySelectorAll('input[data-u]').forEach(ch => ch.onchange = async () => {
+    uMsg('Guardando…');
+    const { error } = await sb.from('flash_autorizados').update({ [ch.dataset.c]: ch.checked }).eq('correo', ch.dataset.u);
+    if (error) { uMsg('No se guardó: ' + error.message, 'mal'); ch.checked = !ch.checked; return; }
+    await bitacora(`${ch.dataset.u}: ${ch.dataset.c} ${ch.checked ? 'sí' : 'no'}`); uMsg('✓ Guardado.', 'bien');
+  });
+  tb.querySelectorAll('[data-quitar]').forEach(b => b.onclick = async () => {
+    if (!confirm('¿Quitarle el acceso a ' + b.dataset.quitar + '?')) return;
+    const { error } = await sb.from('flash_autorizados').delete().eq('correo', b.dataset.quitar);
+    if (error) { uMsg('No se pudo quitar: ' + error.message, 'mal'); return; }
+    await bitacora(b.dataset.quitar + ': baja'); uMsg('✓ ' + b.dataset.quitar + ' ya no tiene acceso.', 'bien'); usrCargar();
+  });
+}
+async function usrAgregar() {
+  const correo = ($('uCorreo').value || '').trim().toLowerCase(), nombre = ($('uNombre').value || '').trim().slice(0, 80);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { uMsg('Escribe un correo válido.', 'mal'); return; }
+  const { error } = await sb.from('flash_autorizados').insert({ correo, nombre: nombre || null, planta_ver: true, alta_por: AUTH.email });
+  if (error) { uMsg('No se pudo agregar: ' + error.message, 'mal'); return; }
+  await bitacora(correo + ': alta (ver)'); $('uCorreo').value = ''; $('uNombre').value = '';
+  uMsg('✓ ' + correo + ' ya puede entrar (solo ver). Marca si necesita más.', 'bien'); usrCargar();
+}
+async function accCargar() {
+  const t = $('t-acc'); t.innerHTML = '<tr><td>Cargando…</td></tr>';
+  const { data, error } = await sb.rpc('flash_accesos_resumen', { p_flash: CFG.flash });
+  if (error) { t.innerHTML = '<tr><td>No se pudo leer: ' + esc(error.message) + '</td></tr>'; return; }
+  t.innerHTML = '<tr><th class="tl">Usuario</th><th>Último acceso</th><th>Últimos 30 días</th><th>Total</th></tr>' +
+    (data || []).map(r => `<tr><td class="tl"><b>${esc(r.nombre || r.correo)}</b>${r.nombre ? `<span class="n" style="display:block;font-size:11px;color:#5d6778">${esc(r.correo)}</span>` : ''}</td><td>${r.ultimo ? fFH(r.ultimo) : 'nunca'}</td><td>${r.accesos_30d}</td><td>${r.accesos_total}</td></tr>`).join('');
+}
+
+/* =================== IMAGEN PARA WHATSAPP =================== */
+async function descargarImagen() {
+  if (!window.html2canvas) { $('imgMsg').textContent = 'No cargó la librería de imagen; revisa tu internet.'; return; }
+  $('imgMsg').textContent = 'Generando…';
+  try {
+    const c = await html2canvas($('phone'), { scale: 2, backgroundColor: '#ffffff' });
+    const a = document.createElement('a'); a.download = `Flash_Namiquipa_${$('dia').value}.png`; a.href = c.toDataURL('image/png'); a.click();
+    $('imgMsg').textContent = '';
+    if (!LOCAL) registrarAcceso('whatsapp');
+  } catch (e) { $('imgMsg').textContent = 'No se pudo generar: ' + e.message; }
+}
+
+$('uAgregar').onclick = usrAgregar;
+iniciar();
+
+</script>
+</body>
+</html>
